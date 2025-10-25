@@ -8,6 +8,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/facturas")
 public class FacturaController {
@@ -32,4 +34,23 @@ public class FacturaController {
         return ResponseEntity.status(HttpStatus.CREATED).body(nuevaFactura);
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<FacturaResponseDTO> obtenerFacturaPorId(@PathVariable Long id) {
+        // Llama al servicio para buscar la factura
+        FacturaResponseDTO factura = facturaService.buscarFacturaPorId(id);
+        // Devuelve la factura encontrada con estado 200 OK
+        return ResponseEntity.ok(factura);
+    }
+
+    /**
+     * Endpoint para LISTAR todas las facturas.
+     * Escucha peticiones GET en /api/facturas
+     */
+    @GetMapping
+    public ResponseEntity<List<FacturaResponseDTO>> listarFacturas() {
+        // Llama al servicio para obtener la lista
+        List<FacturaResponseDTO> facturas = facturaService.listarTodasLasFacturas();
+        // Devuelve la lista con estado 200 OK
+        return ResponseEntity.ok(facturas);
+    }
 }

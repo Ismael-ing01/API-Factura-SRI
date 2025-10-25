@@ -3,6 +3,7 @@ package com.factura.sri.model;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -38,5 +39,11 @@ public class TipoDocumento {
     @Column(updatable = false)
     private LocalDate fechaCreacion;
 
+    // --- AÑADE ESTE CAMPO ---
+    @NotEmpty(message = "El código SRI del tipo de documento es obligatorio")
+    @Size(max = 2, message = "El código SRI debe tener máximo 2 caracteres") // Para "04", "05", etc.
+    @Column(name = "codigo_sri", nullable = false, length = 2)
+    private String codigoSri; // Guarda el código numérico que usa el SRI
+    // -------------------------
 
 }

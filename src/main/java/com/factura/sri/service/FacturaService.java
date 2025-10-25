@@ -1,20 +1,23 @@
 package com.factura.sri.service;
 
-import com.factura.sri.dto.*; // Importa todos tus DTOs
-import com.factura.sri.model.*; // Importa todas tus entidades
+import org.springframework.beans.factory.annotation.Value;
+import com.factura.sri.dto.*;
+import com.factura.sri.model.*;
 import com.factura.sri.enums.EstadoSri;
 import com.factura.sri.enums.TipoCodigoImpuestoIva;
 import com.factura.sri.repository.ClienteRepository;
 import com.factura.sri.repository.FacturaRepository;
-import com.factura.sri.repository.ItemFacturaRepository; // Aunque no lo usemos directamente aquí, es bueno tenerlo
+import com.factura.sri.repository.ItemFacturaRepository;
 import com.factura.sri.repository.ProductoRepository;
+import com.factura.sri.util.GeneradorClaveAcceso;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional; // ¡Muy importante!
 
-import java.time.LocalDateTime; // Para la fecha
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicLong; // Para generar número de factura (temporal)
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
 
 @Service
 public class FacturaService {
@@ -37,14 +40,24 @@ public class FacturaService {
         this.itemFacturaRepository = itemFacturaRepository;
     }
 
-    // --- Lógica para Generar Número de Factura (Temporal - necesita mejora) ---
-    // Esto es solo un ejemplo simple. En producción, necesitarías un sistema
-    // más robusto para generar secuenciales únicos por punto de emisión.
-    private final AtomicLong secuenciaActual = new AtomicLong(0); // Inicia en 0
-    private String generarNumeroFactura() {
-        long nuevaSecuencia = secuenciaActual.incrementAndGet(); // Incrementa y obtiene el nuevo valor
-        // Formato: 001 (establecimiento) - 001 (punto emision) - 000000001 (secuencial)
-        return String.format("001-001-%09d", nuevaSecuencia);
+    // --- 2. LEER DATOS DEL EMISOR DESDE CONFIGURACIÓN ---
+    // Puedes poner estos valores en tu archivo application.properties/yml
+    @Value("${sri.ruc.emisor}") // ej: sri.ruc.emisor=17XXXXXXXXX001
+    private String rucEmisor;
+    @Value("${sri.ambiente}")   // ej: sri.ambiente=1 (Pruebas) o 2 (Producción)
+    private String tipoAmbiente;
+
+    private String generarNumeroFactura(String establecimiento, String puntoEmision) {
+        // 1. Busca el último secuencial usado en la BD para esta serie
+        Long maxSecuencial = facturaRepository
+                .findMaxSecuencialByEstablecimientoAndPuntoEmision(establecimiento, puntoEmision)
+                .orElse(0L); // Si no encuentra ninguno, empieza en 0
+
+        // 2. Calcula el siguiente secuencial
+        long nuevoSecuencial = maxSecuencial + 1;
+
+        // 3. Formatea el número completo
+        return String.format("%s-%s-%09d", establecimiento, puntoEmision, nuevoSecuencial);
     }
 
     /**
@@ -53,6 +66,7 @@ public class FacturaService {
      * @Transactional asegura que todas las operaciones (guardar factura, items, actualizar stock)
      * ocurran como una sola unidad. Si algo falla, todo se deshace (rollback).
      */
+
     @Transactional
     public FacturaResponseDTO crearFactura(FacturaRequestDTO requestDTO) {
 
@@ -63,20 +77,29 @@ public class FacturaService {
         // --- 2. Crear la Entidad Factura (Cabecera) ---
         Factura factura = new Factura();
         factura.setCliente(cliente);
-        factura.setEstadoSri(EstadoSri.GENERADA); // Estado inicial
-        factura.setNumeroFactura(generarNumeroFactura()); // Genera el número secuencial
+        factura.setEstadoSri(EstadoSri.GENERADA);
 
-        // --- 3. Inicializar Acumuladores para Totales ---
+        String establecimiento = "001"; // Ejemplo
+        String puntoEmision = "001";    // Ejemplo
+        factura.setFechaEmision(LocalDateTime.now());
+        factura.setNumeroFactura(generarNumeroFactura(establecimiento, puntoEmision));
+
+        // --- 3. GENERAR Y ASIGNAR CLAVE DE ACCESO --- <<< ¡NUEVA LÍNEA!
+        // Llamamos a la clase estática para generar la clave
+        String claveAccesoGenerada = GeneradorClaveAcceso.generarClaveAcceso(factura, rucEmisor, tipoAmbiente);
+        factura.setClaveAcceso(claveAccesoGenerada); // Guardamos la clave en la entidad
+
+
+        // --- 4. Inicializar Acumuladores para Totales --- (Sin cambios)
         double subtotalSinImpuestos = 0.0;
-        double subtotalIvaGeneral = 0.0; // Base imponible para IVA General
-        double subtotalIva0 = 0.0;       // Base imponible para IVA 0%
-        double valorTotalIva = 0.0;      // Suma del IVA de todas las líneas
+        double subtotalIvaGeneral = 0.0;
+        double subtotalIva0 = 0.0;
+        double valorTotalIva = 0.0;
 
-        // --- 4. Procesar cada Ítem de la Solicitud ---
+        // --- 5. Procesar cada Ítem de la Solicitud --- (Sin cambios)
         List<ItemFactura> itemsFactura = new ArrayList<>();
         for (ItemRequestDTO itemDto : requestDTO.getItems()) {
 
-            // --- 4.1 Validar Producto y Stock ---
             Producto producto = productoRepository.findById(itemDto.getProductoId())
                     .orElseThrow(() -> new RuntimeException("Producto no encontrado con ID: " + itemDto.getProductoId()));
 
@@ -85,70 +108,54 @@ public class FacturaService {
                         + ". Stock actual: " + producto.getStock() + ", Solicitado: " + itemDto.getCantidad());
             }
 
-            // --- 4.2 Crear la Entidad ItemFactura ---
             ItemFactura item = new ItemFactura();
             item.setProducto(producto);
             item.setCantidad(itemDto.getCantidad());
-            // ¡Importante! Guardar el precio actual del producto en el item
             item.setPrecioUnitario(producto.getPrecio());
 
-            // --- 4.3 Calcular Valores e IVA del Item ---
             double subtotalItem = item.getCantidad() * item.getPrecioUnitario();
             double ivaItem = 0.0;
-            double tarifaIvaActual = 0.0; // Porcentaje a aplicar (ej: 15.0)
+            double tarifaIvaActual = 0.0;
 
-            // Determinar tipo de IVA según el producto
             switch (producto.getTipoImpuestoIva()) {
                 case IVA_0:
                     item.setCodigoImpuestoIva(TipoCodigoImpuestoIva.IVA_0);
                     item.setTarifaIva(0.0);
-                    subtotalIva0 += subtotalItem; // Acumula en base IVA 0%
+                    subtotalIva0 += subtotalItem;
                     break;
                 case IVA_GENERAL:
                     item.setCodigoImpuestoIva(TipoCodigoImpuestoIva.IVA_GENERAL);
-                    // --- ¡IMPORTANTE! ---
-                    // Aquí deberías obtener la tarifa de IVA vigente (ej: 15%).
-                    // Puede venir de una configuración, base de datos, etc.
-                    // Por ahora, usaremos 15.0 como ejemplo fijo.
-                    tarifaIvaActual = 15.0; // CAMBIAR ESTO por un valor dinámico/configurable
-                    // ---------------------
+                    tarifaIvaActual = 15.0; // <<< RECUERDA: Obtener esto dinámicamente
                     item.setTarifaIva(tarifaIvaActual);
                     ivaItem = subtotalItem * (tarifaIvaActual / 100.0);
-                    subtotalIvaGeneral += subtotalItem; // Acumula en base IVA General
+                    subtotalIvaGeneral += subtotalItem;
                     break;
-                // Podrías añadir NO_OBJETO si lo necesitas
             }
 
             item.setSubtotal(subtotalItem);
             item.setValorIva(ivaItem);
 
-            // --- 4.4 Acumular Totales Generales ---
             subtotalSinImpuestos += subtotalItem;
             valorTotalIva += ivaItem;
 
-            // --- 4.5 Actualizar Stock del Producto ---
             producto.setStock(producto.getStock() - itemDto.getCantidad());
-            // No es necesario llamar a productoRepository.save() aquí,
-            // @Transactional y JPA se encargarán al final.
 
-            // --- 4.6 Añadir Item a la Factura ---
-            // Usamos el método helper para asegurar la relación bidireccional
-            factura.addItem(item); // Esto también hace item.setFactura(factura);
-            itemsFactura.add(item); // También podemos guardar en una lista local si la necesitamos después
+            factura.addItem(item);
+            itemsFactura.add(item);
         }
 
-        // --- 5. Establecer Totales Calculados en la Factura ---
+        // --- 6. Establecer Totales Calculados en la Factura --- (Sin cambios)
         factura.setSubtotalSinImpuestos(subtotalSinImpuestos);
         factura.setSubtotalIva(subtotalIvaGeneral);
         factura.setSubtotalIva0(subtotalIva0);
         factura.setValorIva(valorTotalIva);
-        factura.setTotal(subtotalSinImpuestos + valorTotalIva); // Cálculo final
+        factura.setTotal(subtotalSinImpuestos + valorTotalIva);
 
-        // --- 6. Guardar la Factura (y sus Items en cascada) ---
-        Factura facturaGuardada = facturaRepository.save(factura);
+        // --- 7. Guardar la Factura (y sus Items en cascada) ---
+        Factura facturaGuardada = facturaRepository.save(factura); // Ahora se guarda CON la claveAcceso
 
-        // --- 7. Convertir a DTO de Respuesta y Devolver ---
-        return convertirFacturaA_DTO(facturaGuardada);
+        // --- 8. Convertir a DTO de Respuesta y Devolver ---
+        return convertirFacturaA_DTO(facturaGuardada); // Asegúrate que este método incluya la clave si quieres verla
     }
 
     // --- Método Privado para Convertir Entidad a DTO de Respuesta ---
@@ -190,4 +197,28 @@ public class FacturaService {
 
     // --- Otros Métodos (Buscar, Listar, etc. - se implementarán después) ---
 
+
+    @Transactional(readOnly = true) // Optimiza la transacción para solo lectura
+    public FacturaResponseDTO buscarFacturaPorId(Long id) {
+        // 1. Busca la entidad Factura por ID
+        Factura factura = facturaRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Factura no encontrada con ID: " + id));
+
+        // 2. Llama al método helper para convertirla a DTO
+        // ¡Importante! Esto carga los 'items' y datos relacionados
+        // mientras la transacción está abierta, evitando LazyInitializationException.
+        return convertirFacturaA_DTO(factura);
+    }
+
+
+    @Transactional(readOnly = true)
+    public List<FacturaResponseDTO> listarTodasLasFacturas() {
+        // 1. Obtiene todas las entidades Factura
+        List<Factura> facturas = facturaRepository.findAll();
+
+        // 2. Convierte cada entidad a su DTO correspondiente
+        return facturas.stream()
+                .map(this::convertirFacturaA_DTO) // Reutiliza el método de conversión
+                .collect(Collectors.toList());
+    }
 }
