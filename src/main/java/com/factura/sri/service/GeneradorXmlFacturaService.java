@@ -41,7 +41,7 @@ public class GeneradorXmlFacturaService {
     @Value("${sri.dirEstablecimiento.emisor}") // Añade esto: sri.dirEstablecimiento.emisor=Direccion Establecimiento 001
     private String dirEstablecimientoEmisor;
 
-    @Value("${sri.contribuyenteEspecial.numero}") // Opcional: sri.contribuyenteEspecial.numero=12345
+    @Value("${sri.contribuyenteEspecial.numero:#{null}}") // Opcional: sri.contribuyenteEspecial.numero=12345
     private String contribuyenteEspecialNumero;
 
     @Value("${sri.obligadoContabilidad}") // Añade esto: sri.obligadoContabilidad=SI (o NO)
@@ -61,8 +61,7 @@ public class GeneradorXmlFacturaService {
         try {
             // 1. Crear el objeto raíz del XML
             FacturaXml facturaXml = new FacturaXml();
-            // Puedes ajustar la versión si es necesario
-            // facturaXml.setVersion("1.0.0");
+            // facturaXml.setVersion("1.1.0"); // O la versión que estés usando
 
             // 2. Poblar InfoTributaria
             facturaXml.setInfoTributaria(crearInfoTributaria(factura));
@@ -81,17 +80,20 @@ public class GeneradorXmlFacturaService {
             Marshaller marshaller = context.createMarshaller();
 
             // Configurar JAXB para formato legible y sin la declaración XML estándar
-            marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
-            marshaller.setProperty(Marshaller.JAXB_FRAGMENT, Boolean.TRUE); // Para omitir <?xml...>
-            marshaller.setProperty("jakarta.xml.bind.encoding", "UTF-8"); // Asegura UTF-8
+            marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE); // Para que el XML sea indentado y legible
+            marshaller.setProperty(Marshaller.JAXB_FRAGMENT, Boolean.TRUE); // Para omitir la declaración <?xml ...?> automática de JAXB
 
+            // --- CORRECCIÓN AQUÍ ---
+            // Usar la constante estándar de JAXB para la codificación
+            marshaller.setProperty(Marshaller.JAXB_ENCODING, "UTF-8");
+            // ---------------------
 
             StringWriter sw = new StringWriter();
-            // Añadir la declaración XML manualmente si JAXB_FRAGMENT es true
+            // Añadir la declaración XML manualmente ya que usamos JAXB_FRAGMENT
             sw.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
-            marshaller.marshal(facturaXml, sw);
+            marshaller.marshal(facturaXml, sw); // Convierte el objeto Java a XML y lo escribe en sw
 
-            return sw.toString();
+            return sw.toString(); // Devuelve el XML como un String
 
         } catch (JAXBException e) {
             // Manejar el error adecuadamente (log, excepción específica)

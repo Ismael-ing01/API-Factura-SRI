@@ -16,7 +16,6 @@ import org.springframework.transaction.annotation.Transactional; // ¡Muy import
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 @Service
@@ -28,16 +27,18 @@ public class FacturaService {
     private final ProductoRepository productoRepository;
     // Aunque ItemFactura se guarda en cascada, podríamos necesitarlo para búsquedas futuras.
     private final ItemFacturaRepository itemFacturaRepository;
+    private final GeneradorXmlFacturaService generadorXmlFacturaService;
 
     // --- Constructor para Inyección de Dependencias ---
     public FacturaService(FacturaRepository facturaRepository,
                           ClienteRepository clienteRepository,
                           ProductoRepository productoRepository,
-                          ItemFacturaRepository itemFacturaRepository) {
+                          ItemFacturaRepository itemFacturaRepository, GeneradorXmlFacturaService generadorXmlFacturaService) {
         this.facturaRepository = facturaRepository;
         this.clienteRepository = clienteRepository;
         this.productoRepository = productoRepository;
         this.itemFacturaRepository = itemFacturaRepository;
+        this.generadorXmlFacturaService = generadorXmlFacturaService;
     }
 
     // --- 2. LEER DATOS DEL EMISOR DESDE CONFIGURACIÓN ---
@@ -210,6 +211,20 @@ public class FacturaService {
         return convertirFacturaA_DTO(factura);
     }
 
+    /**
+     * Busca una entidad Factura por su ID.
+     * Usado internamente o por otros servicios que necesiten la entidad completa.
+     * ¡Importante! Asegura que la transacción esté activa para cargar relaciones LAZY si es necesario.
+     */
+    @Transactional(readOnly = true) // Necesario para cargar posibles relaciones LAZY
+    public Factura buscarEntidadFacturaPorId(Long id) {
+        Factura factura = facturaRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Factura no encontrada con ID: " + id));
+        // Forzar carga de items si son LAZY y se necesitan fuera (opcional, depende de tu generador)
+        // factura.getItems().size(); // Ejemplo para forzar carga
+        return factura;
+    }
+
 
     @Transactional(readOnly = true)
     public List<FacturaResponseDTO> listarTodasLasFacturas() {
@@ -220,5 +235,26 @@ public class FacturaService {
         return facturas.stream()
                 .map(this::convertirFacturaA_DTO) // Reutiliza el método de conversión
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * Busca una factura por ID y genera su representación XML.
+     * Toda la operación ocurre dentro de una transacción para permitir
+     * la carga de asociaciones LAZY necesarias para el XML.
+     *
+     * @param id El ID de la factura a buscar.
+     * @return El String XML de la factura.
+     * @throws RuntimeException Si la factura no se encuentra o hay error al generar XML.
+     */
+    @Transactional(readOnly = true) // La transacción mantiene la sesión abierta
+    public String generarXmlParaFactura(Long id) {
+        // 1. Busca la entidad Factura
+        Factura factura = facturaRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Factura no encontrada con ID: " + id));
+
+        // 2. Llama al servicio generador MIENTRAS LA TRANSACCIÓN ESTÁ ACTIVA
+        // Ahora, cuando el generador acceda a factura.getCliente().getDocumentoClientes(),
+        // Hibernate podrá ir a la base de datos porque la sesión sigue abierta.
+        return generadorXmlFacturaService.generarXml(factura);
     }
 }
