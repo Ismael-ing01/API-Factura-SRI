@@ -34,6 +34,7 @@ public class TipoDocumentoService {
                .map(td -> {
                    td.setCodigoTipoDocumento(tipoDocumento.getCodigoTipoDocumento());
                    td.setNombreTipoDocumento(tipoDocumento.getNombreTipoDocumento());
+                   td.setCodigoSri(tipoDocumento.getCodigoSri());
                    return tipoDocumentoRepository.save(td);
                })
                .orElseThrow(() -> new RuntimeException("TipoDocumento no encontrado con id: " + id));
