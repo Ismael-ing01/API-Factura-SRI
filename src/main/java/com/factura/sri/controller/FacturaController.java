@@ -2,10 +2,9 @@ package com.factura.sri.controller;
 
 import com.factura.sri.dto.FacturaRequestDTO;
 import com.factura.sri.dto.FacturaResponseDTO;
-import com.factura.sri.model.Factura;
 import com.factura.sri.service.FacturaService;
 import com.factura.sri.service.GeneradorXmlFacturaService;
-import jakarta.validation.Valid; // Importa Valid para validaciones de DTO
+import jakarta.validation.Valid;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -36,7 +35,8 @@ public class FacturaController {
         // 1. Llama al método del servicio para crear la factura
         FacturaResponseDTO nuevaFactura = facturaService.crearFactura(facturaRequestDTO);
 
-        // 2. Devuelve una respuesta HTTP 201 (Created) con la factura creada en el cuerpo
+        // 2. Devuelve una respuesta HTTP 201 (Created) con la factura creada en el
+        // cuerpo
         return ResponseEntity.status(HttpStatus.CREATED).body(nuevaFactura);
     }
 
@@ -60,7 +60,6 @@ public class FacturaController {
         return ResponseEntity.ok(facturas);
     }
 
-
     /**
      * Endpoint para obtener el XML generado de una factura específica.
      */
@@ -72,7 +71,8 @@ public class FacturaController {
         // 2. Prepara las cabeceras (sin cambios)
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_XML);
-        // headers.setContentDispositionFormData("attachment", factura.getClaveAcceso() + ".xml"); // Necesitarías la clave aquí si la quieres
+        // headers.setContentDispositionFormData("attachment", factura.getClaveAcceso()
+        // + ".xml"); // Necesitarías la clave aquí si la quieres
 
         // 3. Devuelve el XML (sin cambios)
         return new ResponseEntity<>(xmlFactura, headers, HttpStatus.OK);
