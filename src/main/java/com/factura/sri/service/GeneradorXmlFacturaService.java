@@ -26,30 +26,9 @@ public class GeneradorXmlFacturaService {
     private static final Locale LOCALE_US = Locale.US;
 
     // --- Datos del Emisor (inyectados desde application.properties) ---
-    @Value("${sri.ruc.emisor}")
-    private String rucEmisor;
-
-    @Value("${sri.razonSocial.emisor}") // Añade esto a properties: sri.razonSocial.emisor=Tu Razon Social S.A.
-    private String razonSocialEmisor;
-
-    @Value("${sri.nombreComercial.emisor}") // Opcional: sri.nombreComercial.emisor=Tu Nombre Comercial
-    private String nombreComercialEmisor;
-
-    @Value("${sri.dirMatriz.emisor}") // Añade esto: sri.dirMatriz.emisor=Tu Direccion Matriz
-    private String dirMatrizEmisor;
-
-    @Value("${sri.dirEstablecimiento.emisor}") // Añade esto: sri.dirEstablecimiento.emisor=Direccion Establecimiento
-                                               // 001
-    private String dirEstablecimientoEmisor;
-
-    @Value("${sri.contribuyenteEspecial.numero:#{null}}") // Opcional: sri.contribuyenteEspecial.numero=12345
-    private String contribuyenteEspecialNumero;
-
-    @Value("${sri.obligadoContabilidad}") // Añade esto: sri.obligadoContabilidad=SI (o NO)
-    private String obligadoContabilidad;
-
-    @Value("${sri.ambiente}")
-    private String tipoAmbiente;
+    // --- Datos del Emisor (inyectados desde application.properties) ---
+    // @Value("${sri.ruc.emisor}") ... YA NO SE USAN, SE TOMAN DE LA ENTIDAD EMPRESA
+    // Mantenemos solo por si acaso, pero la lógica ahora usa la Entidad.
 
     /**
      * Método principal para generar el XML de una factura.
@@ -108,85 +87,99 @@ public class GeneradorXmlFacturaService {
 
     private InfoTributariaXml crearInfoTributaria(Factura factura) {
         InfoTributariaXml info = new InfoTributariaXml();
-        info.setAmbiente(tipoAmbiente);
+
+        com.factura.sri.model.Empresa empresa = factura.getSucursal().getEmpresa();
+        com.factura.sri.model.Sucursal sucursal = factura.getSucursal();
+        com.factura.sri.model.Caja caja = factura.getCaja();
+
+        // info.setAmbiente(empresa.getAmbienteSri().toString()); // TOOD: Asegurar tipo
+        // string
+        info.setAmbiente(String.valueOf(empresa.getAmbienteSri()));
         info.setTipoEmision("1"); // Emisión Normal
-        info.setRazonSocial(razonSocialEmisor);
-        info.setNombreComercial(nombreComercialEmisor); // Puede ser null si no aplica
-        info.setRuc(rucEmisor);
+        info.setRazonSocial(empresa.getRazonSocial());
+        info.setNombreComercial(empresa.getNombreComercial());
+        info.setRuc(empresa.getRuc());
         info.setClaveAcceso(factura.getClaveAcceso());
-        info.setCodDoc("01"); // Código de Factura
-        // Extraer estab, ptoEmi, secuencial del numeroFactura
+        info.setCodDoc("01"); // Factura
+
+        info.setEstab(sucursal.getCodigo());
+        info.setPtoEmi(caja.getPuntoEmision());
+
+        // Extraer secuencial del numeroFactura (001-001-000000001)
         String[] partesNum = factura.getNumeroFactura().split("-");
-        info.setEstab(partesNum[0]);
-        info.setPtoEmi(partesNum[1]);
         info.setSecuencial(partesNum[2]);
-        info.setDirMatriz(dirMatrizEmisor);
-        // Aquí añadirías lógica para <agenteRetencion> o <contribuyenteRimpe> si aplica
+
+        info.setDirMatriz(empresa.getDireccionMatriz());
+
         return info;
     }
 
     private InfoFacturaXml crearInfoFactura(Factura factura) {
         InfoFacturaXml info = new InfoFacturaXml();
+
+        com.factura.sri.model.Empresa empresa = factura.getSucursal().getEmpresa();
+
         info.setFechaEmision(factura.getFechaEmision().format(XML_DATE_FORMATTER));
-        info.setDirEstablecimiento(dirEstablecimientoEmisor); // O la dirección específica si varía
-        info.setContribuyenteEspecial(contribuyenteEspecialNumero); // Puede ser null
-        info.setObligadoContabilidad(obligadoContabilidad);
+        info.setDirEstablecimiento(factura.getSucursal().getDireccion());
+        info.setContribuyenteEspecial(empresa.getContribuyenteEspecial());
+        info.setObligadoContabilidad(empresa.getObligadoContabilidad());
 
         // Datos del Comprador
-        // Necesitamos obtener el código del tipo de documento del cliente
-        // Esto asume que tienes una entidad DocumentoCliente asociada al Cliente
-        // Si no, necesitarás ajustar esta lógica
-        DocumentoCliente docCliente = factura.getCliente().getDocumentoClientes().get(0); // Simplificación: toma el
-                                                                                          // primero
-        info.setTipoIdentificacionComprador(docCliente.getTipoDocumento().getCodigoSri()); // NECESITAS ESTE
-                                                                                           // CAMPO/METODO
+        DocumentoCliente docCliente = factura.getCliente().getDocumentoClientes().get(0);
+
+        info.setTipoIdentificacionComprador(docCliente.getTipoDocumento().getCodigoSri());
         info.setRazonSocialComprador(factura.getCliente().getNombres() + " " + factura.getCliente().getApellidos());
         info.setIdentificacionComprador(docCliente.getNumeroDocumento());
-        info.setDireccionComprador(factura.getCliente().getDireccion()); // Opcional
+        info.setDireccionComprador(factura.getCliente().getDireccion());
 
         // Totales (Formateados a String con 2 decimales y punto)
         info.setTotalSinImpuestos(String.format(LOCALE_US, "%.2f", factura.getSubtotalSinImpuestos()));
-        info.setTotalDescuento("0.00"); // Asumiendo que no manejas descuentos generales por ahora
+        info.setTotalDescuento("0.00");
         info.setImporteTotal(String.format(LOCALE_US, "%.2f", factura.getTotal()));
         info.setMoneda("DOLAR");
         info.setPropina("0.00");
 
         // Detalle de Impuestos en Totales
         List<TotalImpuestoXml> totalImpuestos = new ArrayList<>();
-        // IVA 0% (si aplica)
+        // IVA 0%
         if (factura.getSubtotalIva0() > 0) {
             TotalImpuestoXml imp0 = new TotalImpuestoXml();
-            imp0.setCodigo("2"); // Código IVA
-            imp0.setCodigoPorcentaje("0"); // Código Tarifa 0%
+            imp0.setCodigo("2");
+            imp0.setCodigoPorcentaje("0");
             imp0.setBaseImponible(String.format(LOCALE_US, "%.2f", factura.getSubtotalIva0()));
             imp0.setValor("0.00");
             totalImpuestos.add(imp0);
         }
-        // IVA Tarifa General (si aplica)
+        // IVA Tarifa General
         if (factura.getSubtotalIva() > 0) {
             TotalImpuestoXml impGen = new TotalImpuestoXml();
-            impGen.setCodigo("2"); // Código IVA
-            // Determinar el código de porcentaje correcto (2 para 12%, 4 para 15%, etc.)
-            // Necesitas saber qué tarifa se usó. Asumiremos 15% (código 4) por ahora.
-            String codigoPorcentajeIvaGeneral = "4"; // AJUSTAR SEGÚN TARIFA USADA (2=12%, 3=14%, 4=15%, 5=5%, 10=13%)
+            impGen.setCodigo("2");
+            String codigoPorcentajeIvaGeneral = "4"; // AJUSTAR SEGÚN TARIFA USADA
             impGen.setCodigoPorcentaje(codigoPorcentajeIvaGeneral);
             impGen.setBaseImponible(String.format(LOCALE_US, "%.2f", factura.getSubtotalIva()));
             impGen.setValor(String.format(LOCALE_US, "%.2f", factura.getValorIva()));
             totalImpuestos.add(impGen);
         }
-        // Añadir lógica para ICE o IRBPNR si es necesario aquí
 
         TotalConImpuestosXml totalConImpuestosXml = new TotalConImpuestosXml();
         totalConImpuestosXml.setTotalImpuesto(totalImpuestos);
         info.setTotalConImpuestos(totalConImpuestosXml);
 
-        // Pagos (Ejemplo simple: un solo pago con la forma "Sin utilización sistema
-        // financiero")
-        PagoXml pago = new PagoXml();
-        pago.setFormaPago("01"); // Código para "SIN UTILIZACION..." (Tabla 24)
-        pago.setTotal(String.format(LOCALE_US, "%.2f", factura.getTotal()));
-        // plazo y unidadTiempo si fuera a crédito
-        info.setPagos(List.of(pago));
+        // Pagos
+        List<PagoXml> pagosXml = new ArrayList<>();
+        if (factura.getPagos() != null && !factura.getPagos().isEmpty()) {
+            for (com.factura.sri.model.FacturaPago pago : factura.getPagos()) {
+                PagoXml pXml = new PagoXml();
+                pXml.setFormaPago(pago.getFormaPago().getCodigo()); // Ej: 01, 20
+                pXml.setTotal(String.format(LOCALE_US, "%.2f", pago.getTotal()));
+                if (pago.getPlazo() != null && pago.getPlazo() > 0) {
+                    pXml.setPlazo(pago.getPlazo().toString());
+                    pXml.setUnidadTiempo(pago.getUnidadTiempo());
+                }
+                pagosXml.add(pXml);
+            }
+        }
+        info.setPagos(pagosXml);
 
         return info;
     }

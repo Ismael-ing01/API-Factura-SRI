@@ -13,6 +13,12 @@ public class FacturaRequestDTO {
     @NotNull
     private Long clienteId; // ID del Cliente
 
+    // --- Nuevos campos ---
+    private Long sucursalId;
+    private Long cajaId;
+    private List<FacturaPagoDTO> pagos;
+    private List<FacturaCampoAdicionalDTO> infoAdicional;
+
     @NotEmpty
     private List<ItemRequestDTO> items; // Lista de items a incluir
 }

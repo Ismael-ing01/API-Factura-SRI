@@ -6,6 +6,9 @@ import jakarta.validation.constraints.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Getter
 @Setter
@@ -44,4 +47,37 @@ public class Producto {
     @Enumerated(EnumType.STRING)
     @Column(name = "tipo_impuesto_iva", nullable = false, length = 15)
     private TipoImpuestoIvaProducto tipoImpuestoIva;
+
+    // --- Nuevos Campos ---
+    @NotNull(message = "El precio de compra es obligatorio")
+    @PositiveOrZero
+    @Column(name = "precio_compra", nullable = false)
+    private Double precioCompra;
+
+    @NotNull(message = "El margen de utilidad es obligatorio")
+    @PositiveOrZero
+    @Column(name = "margen_utilidad", nullable = false)
+    private Double margenUtilidad; // Porcentaje (ej: 30.0 para 30%)
+
+    @OneToMany(mappedBy = "producto", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<ProductoImagen> imagenes = new ArrayList<>();
+
+    // --- Lógica de negocio ---
+    /**
+     * Calcula el precio de venta sugerido basado en compra y margen.
+     * Ejemplo: Costo 10, Margen 30% -> Precio = 10 / (1 - 0.30) = 14.28
+     * O si es markup directo: Costo 10 + 30% = 13.
+     * Usaremos markup directo por defecto (Costo * (1 + margen/100))
+     */
+    public void calcularPrecioVenta() {
+        if (this.precioCompra != null && this.margenUtilidad != null) {
+            this.precio = this.precioCompra * (1 + (this.margenUtilidad / 100));
+        }
+    }
+
+    @PrePersist
+    @PreUpdate
+    public void preSave() {
+        calcularPrecioVenta();
+    }
 }

@@ -1,6 +1,5 @@
 package com.factura.sri.service;
 
-
 import com.factura.sri.dto.CategoriaDTO;
 import com.factura.sri.dto.ProductoDTO;
 import com.factura.sri.dto.ProductoResponseDTO;
@@ -18,10 +17,19 @@ public class ProductoService {
 
     private final ProductoRepository productoRepository;
     private final CategoriaRepository categoriaRepository;
+    private final com.factura.sri.repository.MovimientoProductoRepository kdxRepository;
+    private final com.factura.sri.repository.MovimientoPrecioRepository precioRepository;
+    private final com.factura.sri.repository.ProductoImagenRepository imagenRepository;
 
-    public ProductoService(ProductoRepository pRepo, CategoriaRepository cRepo) {
+    public ProductoService(ProductoRepository pRepo, CategoriaRepository cRepo,
+            com.factura.sri.repository.MovimientoProductoRepository kRepo,
+            com.factura.sri.repository.MovimientoPrecioRepository prRepo,
+            com.factura.sri.repository.ProductoImagenRepository imgRepo) {
         this.productoRepository = pRepo;
         this.categoriaRepository = cRepo;
+        this.kdxRepository = kRepo;
+        this.precioRepository = prRepo;
+        this.imagenRepository = imgRepo;
     }
 
     /**
@@ -30,20 +38,62 @@ public class ProductoService {
      */
     @Transactional
     public Producto guardarProducto(ProductoDTO productoDTO) {
-        // 1. Busca la entidad Categoria real usando el ID de la "comanda".
         Categoria categoria = categoriaRepository.findById(productoDTO.getCategoriaId())
                 .orElseThrow(() -> new RuntimeException("Categoría no encontrada"));
 
-        // 2. "Prepara el plato": Convierte el DTO simple en una Entidad completa.
         Producto producto = new Producto();
         producto.setNombre(productoDTO.getNombre());
-        producto.setPrecio(productoDTO.getPrecio());
         producto.setStock(productoDTO.getStock());
-        producto.setCategoria(categoria); // Asigna la entidad Categoria completa.
+        producto.setCategoria(categoria);
         producto.setTipoImpuestoIva(productoDTO.getTipoImpuestoIva());
 
-        // 3. Guarda la entidad en la base de datos.
-        return productoRepository.save(producto);
+        // Logic de Precios
+        producto.setPrecioCompra(productoDTO.getPrecioCompra() != null ? productoDTO.getPrecioCompra() : 0.0);
+        producto.setMargenUtilidad(productoDTO.getMargenUtilidad() != null ? productoDTO.getMargenUtilidad() : 0.0);
+
+        // Si viene el precio venta manual, usalo, sino calcúlalo
+        if (productoDTO.getPrecio() != null) {
+            producto.setPrecio(productoDTO.getPrecio());
+        } else {
+            producto.calcularPrecioVenta(); // Usa costo y margen
+        }
+
+        Producto saved = productoRepository.save(producto);
+
+        // Guardar Imagenes
+        if (productoDTO.getImagenes() != null) {
+            for (String url : productoDTO.getImagenes()) {
+                com.factura.sri.model.ProductoImagen img = new com.factura.sri.model.ProductoImagen();
+                img.setUrl(url);
+                img.setProducto(saved);
+                imagenRepository.save(img);
+            }
+        }
+
+        // Registrar Inventario Inicial (Kardex)
+        if (saved.getStock() > 0) {
+            com.factura.sri.model.MovimientoProducto mp = new com.factura.sri.model.MovimientoProducto();
+            mp.setFecha(java.time.LocalDateTime.now());
+            mp.setTipoMovimiento("INVENTARIO_INICIAL");
+            mp.setCantidad(saved.getStock());
+            mp.setCostoUnitario(saved.getPrecioCompra());
+            mp.setSaldoStock(saved.getStock());
+            mp.setReferencia("Carga Inicial");
+            mp.setProducto(saved);
+            kdxRepository.save(mp);
+        }
+
+        // Registrar Precio Inicial
+        com.factura.sri.model.MovimientoPrecio mpr = new com.factura.sri.model.MovimientoPrecio();
+        mpr.setFecha(java.time.LocalDateTime.now());
+        mpr.setPrecioAnterior(0.0);
+        mpr.setPrecioNuevo(saved.getPrecio());
+        mpr.setMargenAnterior(0.0);
+        mpr.setMargenNuevo(saved.getMargenUtilidad());
+        mpr.setProducto(saved);
+        precioRepository.save(mpr);
+
+        return saved;
     }
 
     /**
@@ -86,7 +136,8 @@ public class ProductoService {
 
         // 2. Busca la nueva categoría (por si cambió)
         Categoria categoria = categoriaRepository.findById(productoDTO.getCategoriaId())
-                .orElseThrow(() -> new RuntimeException("Categoría no encontrada con ID: " + productoDTO.getCategoriaId()));
+                .orElseThrow(
+                        () -> new RuntimeException("Categoría no encontrada con ID: " + productoDTO.getCategoriaId()));
 
         // 3. Actualiza todos los campos del producto existente
         productoExistente.setNombre(productoDTO.getNombre());
@@ -114,7 +165,8 @@ public class ProductoService {
     }
 
     /**
-     * Este es el "traductor". Se ejecuta dentro de la transacción de 'buscarTodos()',
+     * Este es el "traductor". Se ejecuta dentro de la transacción de
+     * 'buscarTodos()',
      * por lo que la conexión a la DB sigue abierta.
      * ¡AQUÍ ES DONDE SE SOLUCIONA LA LazyInitializationException!
      */

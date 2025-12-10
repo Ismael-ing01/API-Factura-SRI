@@ -25,21 +25,34 @@ public class FacturaService {
     private final FacturaRepository facturaRepository;
     private final ClienteRepository clienteRepository;
     private final ProductoRepository productoRepository;
-    // Aunque ItemFactura se guarda en cascada, podríamos necesitarlo para búsquedas
-    // futuras.
     private final ItemFacturaRepository itemFacturaRepository;
     private final GeneradorXmlFacturaService generadorXmlFacturaService;
+
+    // Nuevos Repositorios
+    private final com.factura.sri.repository.SucursalRepository sucursalRepository;
+    private final com.factura.sri.repository.CajaRepository cajaRepository;
+    private final com.factura.sri.repository.MovimientoProductoRepository kdxRepository;
+    private final com.factura.sri.repository.FormaPagoRepository formaPagoRepository;
 
     // --- Constructor para Inyección de Dependencias ---
     public FacturaService(FacturaRepository facturaRepository,
             ClienteRepository clienteRepository,
             ProductoRepository productoRepository,
-            ItemFacturaRepository itemFacturaRepository, GeneradorXmlFacturaService generadorXmlFacturaService) {
+            ItemFacturaRepository itemFacturaRepository,
+            GeneradorXmlFacturaService generadorXmlFacturaService,
+            com.factura.sri.repository.SucursalRepository sucursalRepo,
+            com.factura.sri.repository.CajaRepository cajaRepo,
+            com.factura.sri.repository.MovimientoProductoRepository kdxRepo,
+            com.factura.sri.repository.FormaPagoRepository fpRepo) {
         this.facturaRepository = facturaRepository;
         this.clienteRepository = clienteRepository;
         this.productoRepository = productoRepository;
         this.itemFacturaRepository = itemFacturaRepository;
         this.generadorXmlFacturaService = generadorXmlFacturaService;
+        this.sucursalRepository = sucursalRepo;
+        this.cajaRepository = cajaRepo;
+        this.kdxRepository = kdxRepo;
+        this.formaPagoRepository = fpRepo;
     }
 
     // --- 2. LEER DATOS DEL EMISOR DESDE CONFIGURACIÓN ---
@@ -80,13 +93,21 @@ public class FacturaService {
         Cliente cliente = clienteRepository.findById(requestDTO.getClienteId())
                 .orElseThrow(() -> new RuntimeException("Cliente no encontrado con ID: " + requestDTO.getClienteId()));
 
+        // --- 1.1 Validar Sucursal y Caja ---
+        com.factura.sri.model.Sucursal sucursal = sucursalRepository.findById(requestDTO.getSucursalId())
+                .orElseThrow(() -> new RuntimeException("Sucursal no encontrada"));
+        com.factura.sri.model.Caja caja = cajaRepository.findById(requestDTO.getCajaId())
+                .orElseThrow(() -> new RuntimeException("Caja no encontrada"));
+
         // --- 2. Crear la Entidad Factura (Cabecera) ---
         Factura factura = new Factura();
         factura.setCliente(cliente);
+        factura.setSucursal(sucursal);
+        factura.setCaja(caja);
         factura.setEstadoSri(EstadoSri.GENERADA);
 
-        String establecimiento = "001"; // Ejemplo
-        String puntoEmision = "001"; // Ejemplo
+        String establecimiento = sucursal.getCodigo();
+        String puntoEmision = caja.getPuntoEmision();
         factura.setFechaEmision(LocalDateTime.now());
         factura.setNumeroFactura(generarNumeroFactura(establecimiento, puntoEmision));
 
@@ -157,8 +178,48 @@ public class FacturaService {
         factura.setValorIva(valorTotalIva);
         factura.setTotal(subtotalSinImpuestos + valorTotalIva);
 
+        // --- 6.1 Procesar Pagos ---
+        if (requestDTO.getPagos() != null && !requestDTO.getPagos().isEmpty()) {
+            for (FacturaPagoDTO pagoDTO : requestDTO.getPagos()) {
+                com.factura.sri.model.FormaPago fp = formaPagoRepository.findById(pagoDTO.getFormaPagoId())
+                        .orElseThrow(() -> new RuntimeException("Forma de Pago no encontrada"));
+
+                com.factura.sri.model.FacturaPago pago = new com.factura.sri.model.FacturaPago();
+                pago.setFormaPago(fp);
+                pago.setTotal(pagoDTO.getTotal());
+                pago.setPlazo(pagoDTO.getPlazo());
+                pago.setUnidadTiempo(pagoDTO.getUnidadTiempo());
+                factura.addPago(pago);
+            }
+        }
+
+        // --- 6.2 Procesar Info Adicional ---
+        if (requestDTO.getInfoAdicional() != null) {
+            for (FacturaCampoAdicionalDTO infoDTO : requestDTO.getInfoAdicional()) {
+                com.factura.sri.model.FacturaCampoAdicional campo = new com.factura.sri.model.FacturaCampoAdicional();
+                campo.setNombre(infoDTO.getNombre());
+                campo.setValor(infoDTO.getValor());
+                factura.addCampoAdicional(campo);
+            }
+        }
+
         // --- 7. Guardar la Factura (y sus Items en cascada) ---
         Factura facturaGuardada = facturaRepository.save(factura); // Ahora se guarda CON la claveAcceso
+
+        // --- 7.1 Registrar KARDEX (Salida de Inventario) ---
+        for (ItemFactura item : facturaGuardada.getItems()) {
+            Producto prod = item.getProducto();
+
+            com.factura.sri.model.MovimientoProducto mp = new com.factura.sri.model.MovimientoProducto();
+            mp.setFecha(LocalDateTime.now());
+            mp.setTipoMovimiento("VENTA");
+            mp.setCantidad(-item.getCantidad()); // Salida es negativa
+            mp.setCostoUnitario(prod.getPrecioCompra()); // Costo promedio o actual
+            mp.setSaldoStock(prod.getStock()); // El stock ya fue descontado en el bucle anterior (L147)
+            mp.setReferencia("Factura: " + facturaGuardada.getNumeroFactura());
+            mp.setProducto(prod);
+            kdxRepository.save(mp);
+        }
 
         // --- 8. Convertir a DTO de Respuesta y Devolver ---
         return convertirFacturaA_DTO(facturaGuardada); // Asegúrate que este método incluya la clave si quieres verla

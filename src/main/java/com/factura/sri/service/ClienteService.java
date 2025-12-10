@@ -34,62 +34,60 @@ public class ClienteService {
             throw new RuntimeException("No tiene documentos asociados");
         }
 
-        Cliente cliente = clienteDto.getCliente();
+        // Usar método helper o map manual
+        Cliente cliente = clienteDto.toClienteEntity();
+        if (cliente.getEstado() == null)
+            cliente.setEstado("A"); // Default
+
         cliente = clienteRepository.save(cliente);
 
         for (DocumentoClienteDto documentoDto : documentos) {
             DocumentoCliente documentoCliente = new DocumentoCliente();
             documentoCliente.setCliente(cliente);
-            documentoDto.getNumeroDocumento();
-            documentoDto.getIdTipoDocumento();
+            // documentoDto.getNumeroDocumento(); // linea muerta
+            // documentoDto.getIdTipoDocumento(); // linea muerta
             documentoCliente.setNumeroDocumento(documentoDto.getNumeroDocumento());
             TipoDocumento tipoDocumento = tipoDocumentoRepository.getById(documentoDto.getIdTipoDocumento());
             documentoCliente.setTipoDocumento(tipoDocumento);
             documentoClienteRepository.save(documentoCliente);
         }
 
-     clienteDto.getCliente().setId(cliente.getId());
-      return clienteDto;
+        // No necesitamos devolver el ID en el DTO de entrada, pero si quieres:
+        // clienteDto.setId(cliente.getId());
+        return clienteDto;
     }
 
     public List<ClienteConDocumentosDto> listarClientes() {
         List<Cliente> clientes = clienteRepository.findAll();
 
-        return clientes.stream().map(cliente -> {
-            List<DocumentoClienteDto> documentos = documentoClienteRepository
-                    .findByClienteId(cliente.getId())
-                    .stream()
-                    .map(doc -> {
-                        DocumentoClienteDto docDto = new DocumentoClienteDto();
-                        docDto.setIdTipoDocumento(doc.getIdDocumentoCliente());
-                        docDto.setNumeroDocumento(doc.getNumeroDocumento());
-                        return docDto;
-                    })
-                    .collect(Collectors.toList());
-
-            ClienteConDocumentosDto clienteDto = new ClienteConDocumentosDto();
-            clienteDto.setCliente(cliente);
-            clienteDto.setDocumentos(documentos);
-            return clienteDto;
-        }).collect(Collectors.toList());
+        return clientes.stream().map(this::convertirAClienteDto).collect(Collectors.toList());
     }
 
     public ClienteConDocumentosDto buscarPorId(Long id) {
         Cliente cliente = clienteRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Cliente no encontrado con ID: " + id));
+        return convertirAClienteDto(cliente);
+    }
 
+    private ClienteConDocumentosDto convertirAClienteDto(Cliente cliente) {
         List<DocumentoClienteDto> documentos = documentoClienteRepository
-                .findByClienteId(id)
+                .findByClienteId(cliente.getId())
                 .stream()
                 .map(doc -> {
                     DocumentoClienteDto docDto = new DocumentoClienteDto();
-                    docDto.setIdTipoDocumento(doc.getTipoDocumento().getIdTipoDocumento()); // ID del tipo de doc
+                    docDto.setIdTipoDocumento(doc.getTipoDocumento().getIdTipoDocumento());
                     docDto.setNumeroDocumento(doc.getNumeroDocumento());
                     return docDto;
                 })
                 .collect(Collectors.toList());
+
         ClienteConDocumentosDto dto = new ClienteConDocumentosDto();
-        dto.setCliente(cliente);
+        dto.setNombres(cliente.getNombres());
+        dto.setApellidos(cliente.getApellidos());
+        dto.setDireccion(cliente.getDireccion());
+        dto.setTelefono(cliente.getTelefono());
+        dto.setEmail(cliente.getEmail());
+        dto.setEstado(cliente.getEstado());
         dto.setDocumentos(documentos);
 
         return dto;
@@ -100,20 +98,20 @@ public class ClienteService {
         Cliente clienteExistente = clienteRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Cliente no encontrado con ID: " + id));
 
-        // Actualizar datos del cliente
-        Cliente clienteNuevo = clienteDto.getCliente();
-        clienteExistente.setNombres(clienteNuevo.getNombres());
-        clienteExistente.setApellidos(clienteNuevo.getApellidos());
-        clienteExistente.setDireccion(clienteNuevo.getDireccion());
-        clienteExistente.setTelefono(clienteNuevo.getTelefono());
-        clienteExistente.setEmail(clienteNuevo.getEmail());
-        clienteExistente.setEstado(clienteNuevo.getEstado());
+        // Actualizar datos del cliente usando DTO plano
+        clienteExistente.setNombres(clienteDto.getNombres());
+        clienteExistente.setApellidos(clienteDto.getApellidos());
+        clienteExistente.setDireccion(clienteDto.getDireccion());
+        clienteExistente.setTelefono(clienteDto.getTelefono());
+        clienteExistente.setEmail(clienteDto.getEmail());
+        if (clienteDto.getEstado() != null) {
+            clienteExistente.setEstado(clienteDto.getEstado());
+        }
         clienteRepository.save(clienteExistente);
 
         // Eliminar documentos anteriores
         documentoClienteRepository.deleteAll(
-                documentoClienteRepository.findByClienteId(id)
-        );
+                documentoClienteRepository.findByClienteId(id));
 
         // Guardar documentos nuevos
         for (DocumentoClienteDto docDto : clienteDto.getDocumentos()) {
@@ -126,7 +124,6 @@ public class ClienteService {
             documentoClienteRepository.save(documento);
         }
 
-        clienteDto.getCliente().setId(clienteExistente.getId());
         return clienteDto;
     }
 
@@ -137,8 +134,7 @@ public class ClienteService {
         }
 
         documentoClienteRepository.deleteAll(
-                documentoClienteRepository.findByClienteId(id)
-        );
+                documentoClienteRepository.findByClienteId(id));
 
         clienteRepository.deleteById(id);
     }

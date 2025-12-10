@@ -10,7 +10,12 @@ public class ProductoDTO {
     private String nombre;
     private Double precio;
     private Integer stock;
-    private Long categoriaId; // <-- Aquí especificamos el ID de la categoría
+    private Long categoriaId;
+
+    // --- Nuevos campos ---
+    private Double precioCompra;
+    private Double margenUtilidad;
+    private java.util.List<String> imagenes; // URLs
 
     @NotNull(message = "Debe especificar el tipo de IVA del producto") // <-- Validación
     private TipoImpuestoIvaProducto tipoImpuestoIva; // <-- NUEVO CAMPO

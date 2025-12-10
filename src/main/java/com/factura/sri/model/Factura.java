@@ -34,9 +34,24 @@ public class Factura {
     @JoinColumn(name = "cliente_id", nullable = false)
     private Cliente cliente;
 
+    // --- Relación con Sucursal y Caja ---
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "sucursal_id", nullable = false)
+    private Sucursal sucursal;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "caja_id", nullable = false)
+    private Caja caja;
+
     // --- Relación con Items ---
     @OneToMany(mappedBy = "factura", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<ItemFactura> items = new ArrayList<>();
+
+    @OneToMany(mappedBy = "factura", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<FacturaPago> pagos = new ArrayList<>();
+
+    @OneToMany(mappedBy = "factura", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<FacturaCampoAdicional> infoAdicional = new ArrayList<>();
 
     // --- Campos Requeridos por SRI ---
     @Column(name = "clave_acceso", length = 49, unique = true)
@@ -75,5 +90,15 @@ public class Factura {
     public void addItem(ItemFactura item) {
         items.add(item);
         item.setFactura(this);
+    }
+
+    public void addPago(FacturaPago pago) {
+        pagos.add(pago);
+        pago.setFactura(this);
+    }
+
+    public void addCampoAdicional(FacturaCampoAdicional campo) {
+        infoAdicional.add(campo);
+        campo.setFactura(this);
     }
 }
