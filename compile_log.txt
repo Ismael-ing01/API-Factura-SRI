@@ -1,0 +1,114 @@
+﻿[INFO] Scanning for projects...
+[INFO] 
+[INFO] --------------------------< com.factura:sri >---------------------------
+[INFO] Building Facturacion 0.0.1-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- clean:3.4.0:clean (default-clean) @ sri ---
+[INFO] Deleting C:\Users\ASUS\Documents\Herramientas de Prg\Practicas\API-Factura-SRI\target
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ sri ---
+[INFO] Copying 1 resource from src\main\resources to target\classes
+[INFO] Copying 0 resource from src\main\resources to target\classes
+[INFO] 
+[INFO] --- compiler:3.13.0:compile (default-compile) @ sri ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 66 source files with javac [debug parameters release 21] to target\classes
+[INFO] -------------------------------------------------------------
+[ERROR] COMPILATION ERROR : 
+[INFO] -------------------------------------------------------------
+[ERROR] /C:/Users/ASUS/Documents/Herramientas de Prg/Practicas/API-Factura-SRI/src/main/java/com/factura/sri/dto/FacturaRequestDTO.java:[1,9] implicitly declared classes are a preview feature and are disabled by default.
+  (use --enable-preview to enable implicitly declared classes)
+[ERROR] /C:/Users/ASUS/Documents/Herramientas de Prg/Practicas/API-Factura-SRI/src/main/java/com/factura/sri/dto/FacturaRequestDTO.java:[3,1] class, interface, enum, or record expected
+[ERROR] /C:/Users/ASUS/Documents/Herramientas de Prg/Practicas/API-Factura-SRI/src/main/java/com/factura/sri/service/GeneradorXmlFacturaService.java:[153,1] illegal start of expression
+[ERROR] /C:/Users/ASUS/Documents/Herramientas de Prg/Practicas/API-Factura-SRI/src/main/java/com/factura/sri/service/GeneradorXmlFacturaService.java:[153,24] not a statement
+[ERROR] /C:/Users/ASUS/Documents/Herramientas de Prg/Practicas/API-Factura-SRI/src/main/java/com/factura/sri/service/GeneradorXmlFacturaService.java:[155,1] illegal start of expression
+[ERROR] /C:/Users/ASUS/Documents/Herramientas de Prg/Practicas/API-Factura-SRI/src/main/java/com/factura/sri/service/GeneradorXmlFacturaService.java:[155,29] not a statement
+[ERROR] /C:/Users/ASUS/Documents/Herramientas de Prg/Practicas/API-Factura-SRI/src/main/java/com/factura/sri/service/GeneradorXmlFacturaService.java:[156,1] illegal start of expression
+[ERROR] /C:/Users/ASUS/Documents/Herramientas de Prg/Practicas/API-Factura-SRI/src/main/java/com/factura/sri/service/GeneradorXmlFacturaService.java:[156,29] not a statement
+[ERROR] /C:/Users/ASUS/Documents/Herramientas de Prg/Practicas/API-Factura-SRI/src/main/java/com/factura/sri/service/GeneradorXmlFacturaService.java:[157,1] illegal start of expression
+[ERROR] /C:/Users/ASUS/Documents/Herramientas de Prg/Practicas/API-Factura-SRI/src/main/java/com/factura/sri/service/GeneradorXmlFacturaService.java:[157,29] not a statement
+[ERROR] /C:/Users/ASUS/Documents/Herramientas de Prg/Practicas/API-Factura-SRI/src/main/java/com/factura/sri/service/GeneradorXmlFacturaService.java:[158,1] illegal start of expression
+[ERROR] /C:/Users/ASUS/Documents/Herramientas de Prg/Practicas/API-Factura-SRI/src/main/java/com/factura/sri/service/GeneradorXmlFacturaService.java:[158,29] not a statement
+[ERROR] /C:/Users/ASUS/Documents/Herramientas de Prg/Practicas/API-Factura-SRI/src/main/java/com/factura/sri/service/GeneradorXmlFacturaService.java:[159,1] illegal start of expression
+[ERROR] /C:/Users/ASUS/Documents/Herramientas de Prg/Practicas/API-Factura-SRI/src/main/java/com/factura/sri/service/GeneradorXmlFacturaService.java:[159,29] not a statement
+[ERROR] /C:/Users/ASUS/Documents/Herramientas de Prg/Practicas/API-Factura-SRI/src/main/java/com/factura/sri/service/GeneradorXmlFacturaService.java:[160,1] illegal start of expression
+[ERROR] /C:/Users/ASUS/Documents/Herramientas de Prg/Practicas/API-Factura-SRI/src/main/java/com/factura/sri/service/GeneradorXmlFacturaService.java:[160,28] <identifier> expected
+[ERROR] /C:/Users/ASUS/Documents/Herramientas de Prg/Practicas/API-Factura-SRI/src/main/java/com/factura/sri/service/GeneradorXmlFacturaService.java:[160,29] illegal start of expression
+[ERROR] /C:/Users/ASUS/Documents/Herramientas de Prg/Practicas/API-Factura-SRI/src/main/java/com/factura/sri/service/GeneradorXmlFacturaService.java:[161,1] illegal start of expression
+[ERROR] /C:/Users/ASUS/Documents/Herramientas de Prg/Practicas/API-Factura-SRI/src/main/java/com/factura/sri/service/GeneradorXmlFacturaService.java:[161,24] not a statement
+[ERROR] /C:/Users/ASUS/Documents/Herramientas de Prg/Practicas/API-Factura-SRI/src/main/java/com/factura/sri/service/GeneradorXmlFacturaService.java:[162,1] illegal start of expression
+[ERROR] /C:/Users/ASUS/Documents/Herramientas de Prg/Practicas/API-Factura-SRI/src/main/java/com/factura/sri/service/GeneradorXmlFacturaService.java:[162,24] not a statement
+[ERROR] /C:/Users/ASUS/Documents/Herramientas de Prg/Practicas/API-Factura-SRI/src/main/java/com/factura/sri/service/GeneradorXmlFacturaService.java:[163,1] illegal start of expression
+[ERROR] /C:/Users/ASUS/Documents/Herramientas de Prg/Practicas/API-Factura-SRI/src/main/java/com/factura/sri/service/GeneradorXmlFacturaService.java:[163,24] not a statement
+[ERROR] /C:/Users/ASUS/Documents/Herramientas de Prg/Practicas/API-Factura-SRI/src/main/java/com/factura/sri/service/GeneradorXmlFacturaService.java:[164,1] illegal start of expression
+[ERROR] /C:/Users/ASUS/Documents/Herramientas de Prg/Practicas/API-Factura-SRI/src/main/java/com/factura/sri/service/GeneradorXmlFacturaService.java:[164,52] not a statement
+[ERROR] /C:/Users/ASUS/Documents/Herramientas de Prg/Practicas/API-Factura-SRI/src/main/java/com/factura/sri/service/GeneradorXmlFacturaService.java:[165,1] illegal start of expression
+[ERROR] /C:/Users/ASUS/Documents/Herramientas de Prg/Practicas/API-Factura-SRI/src/main/java/com/factura/sri/service/GeneradorXmlFacturaService.java:[165,38] not a statement
+[ERROR] /C:/Users/ASUS/Documents/Herramientas de Prg/Practicas/API-Factura-SRI/src/main/java/com/factura/sri/service/GeneradorXmlFacturaService.java:[167,1] illegal start of expression
+[ERROR] /C:/Users/ASUS/Documents/Herramientas de Prg/Practicas/API-Factura-SRI/src/main/java/com/factura/sri/service/GeneradorXmlFacturaService.java:[167,15] not a statement
+[ERROR] /C:/Users/ASUS/Documents/Herramientas de Prg/Practicas/API-Factura-SRI/src/main/java/com/factura/sri/service/GeneradorXmlFacturaService.java:[168,1] illegal start of expression
+[ERROR] /C:/Users/ASUS/Documents/Herramientas de Prg/Practicas/API-Factura-SRI/src/main/java/com/factura/sri/service/GeneradorXmlFacturaService.java:[168,24] not a statement
+[ERROR] /C:/Users/ASUS/Documents/Herramientas de Prg/Practicas/API-Factura-SRI/src/main/java/com/factura/sri/service/GeneradorXmlFacturaService.java:[169,1] illegal start of expression
+[ERROR] /C:/Users/ASUS/Documents/Herramientas de Prg/Practicas/API-Factura-SRI/src/main/java/com/factura/sri/service/GeneradorXmlFacturaService.java:[169,17] not a statement
+[ERROR] /C:/Users/ASUS/Documents/Herramientas de Prg/Practicas/API-Factura-SRI/src/main/java/com/factura/sri/service/GeneradorXmlFacturaService.java:[170,1] illegal start of expression
+[ERROR] /C:/Users/ASUS/Documents/Herramientas de Prg/Practicas/API-Factura-SRI/src/main/java/com/factura/sri/service/GeneradorXmlFacturaService.java:[170,17] not a statement
+[ERROR] /C:/Users/ASUS/Documents/Herramientas de Prg/Practicas/API-Factura-SRI/src/main/java/com/factura/sri/service/GeneradorXmlFacturaService.java:[171,1] illegal start of expression
+[ERROR] /C:/Users/ASUS/Documents/Herramientas de Prg/Practicas/API-Factura-SRI/src/main/java/com/factura/sri/service/GeneradorXmlFacturaService.java:[171,17] not a statement
+[ERROR] /C:/Users/ASUS/Documents/Herramientas de Prg/Practicas/API-Factura-SRI/src/main/java/com/factura/sri/service/GeneradorXmlFacturaService.java:[429,2] reached end of file while parsing
+[INFO] 38 errors 
+[INFO] -------------------------------------------------------------
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  3.457 s
+[INFO] Finished at: 2025-12-04T23:35:59-05:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-compiler-plugin:3.13.0:compile (default-compile) on project sri: Compilation failure: Compilation failure: 
+[ERROR] /C:/Users/ASUS/Documents/Herramientas de Prg/Practicas/API-Factura-SRI/src/main/java/com/factura/sri/dto/FacturaRequestDTO.java:[1,9] implicitly declared classes are a preview feature and are disabled by default.
+[ERROR]   (use --enable-preview to enable implicitly declared classes)
+[ERROR] /C:/Users/ASUS/Documents/Herramientas de Prg/Practicas/API-Factura-SRI/src/main/java/com/factura/sri/dto/FacturaRequestDTO.java:[3,1] class, interface, enum, or record expected
+[ERROR] /C:/Users/ASUS/Documents/Herramientas de Prg/Practicas/API-Factura-SRI/src/main/java/com/factura/sri/service/GeneradorXmlFacturaService.java:[153,1] illegal start of expression
+[ERROR] /C:/Users/ASUS/Documents/Herramientas de Prg/Practicas/API-Factura-SRI/src/main/java/com/factura/sri/service/GeneradorXmlFacturaService.java:[153,24] not a statement
+[ERROR] /C:/Users/ASUS/Documents/Herramientas de Prg/Practicas/API-Factura-SRI/src/main/java/com/factura/sri/service/GeneradorXmlFacturaService.java:[155,1] illegal start of expression
+[ERROR] /C:/Users/ASUS/Documents/Herramientas de Prg/Practicas/API-Factura-SRI/src/main/java/com/factura/sri/service/GeneradorXmlFacturaService.java:[155,29] not a statement
+[ERROR] /C:/Users/ASUS/Documents/Herramientas de Prg/Practicas/API-Factura-SRI/src/main/java/com/factura/sri/service/GeneradorXmlFacturaService.java:[156,1] illegal start of expression
+[ERROR] /C:/Users/ASUS/Documents/Herramientas de Prg/Practicas/API-Factura-SRI/src/main/java/com/factura/sri/service/GeneradorXmlFacturaService.java:[156,29] not a statement
+[ERROR] /C:/Users/ASUS/Documents/Herramientas de Prg/Practicas/API-Factura-SRI/src/main/java/com/factura/sri/service/GeneradorXmlFacturaService.java:[157,1] illegal start of expression
+[ERROR] /C:/Users/ASUS/Documents/Herramientas de Prg/Practicas/API-Factura-SRI/src/main/java/com/factura/sri/service/GeneradorXmlFacturaService.java:[157,29] not a statement
+[ERROR] /C:/Users/ASUS/Documents/Herramientas de Prg/Practicas/API-Factura-SRI/src/main/java/com/factura/sri/service/GeneradorXmlFacturaService.java:[158,1] illegal start of expression
+[ERROR] /C:/Users/ASUS/Documents/Herramientas de Prg/Practicas/API-Factura-SRI/src/main/java/com/factura/sri/service/GeneradorXmlFacturaService.java:[158,29] not a statement
+[ERROR] /C:/Users/ASUS/Documents/Herramientas de Prg/Practicas/API-Factura-SRI/src/main/java/com/factura/sri/service/GeneradorXmlFacturaService.java:[159,1] illegal start of expression
+[ERROR] /C:/Users/ASUS/Documents/Herramientas de Prg/Practicas/API-Factura-SRI/src/main/java/com/factura/sri/service/GeneradorXmlFacturaService.java:[159,29] not a statement
+[ERROR] /C:/Users/ASUS/Documents/Herramientas de Prg/Practicas/API-Factura-SRI/src/main/java/com/factura/sri/service/GeneradorXmlFacturaService.java:[160,1] illegal start of expression
+[ERROR] /C:/Users/ASUS/Documents/Herramientas de Prg/Practicas/API-Factura-SRI/src/main/java/com/factura/sri/service/GeneradorXmlFacturaService.java:[160,28] <identifier> expected
+[ERROR] /C:/Users/ASUS/Documents/Herramientas de Prg/Practicas/API-Factura-SRI/src/main/java/com/factura/sri/service/GeneradorXmlFacturaService.java:[160,29] illegal start of expression
+[ERROR] /C:/Users/ASUS/Documents/Herramientas de Prg/Practicas/API-Factura-SRI/src/main/java/com/factura/sri/service/GeneradorXmlFacturaService.java:[161,1] illegal start of expression
+[ERROR] /C:/Users/ASUS/Documents/Herramientas de Prg/Practicas/API-Factura-SRI/src/main/java/com/factura/sri/service/GeneradorXmlFacturaService.java:[161,24] not a statement
+[ERROR] /C:/Users/ASUS/Documents/Herramientas de Prg/Practicas/API-Factura-SRI/src/main/java/com/factura/sri/service/GeneradorXmlFacturaService.java:[162,1] illegal start of expression
+[ERROR] /C:/Users/ASUS/Documents/Herramientas de Prg/Practicas/API-Factura-SRI/src/main/java/com/factura/sri/service/GeneradorXmlFacturaService.java:[162,24] not a statement
+[ERROR] /C:/Users/ASUS/Documents/Herramientas de Prg/Practicas/API-Factura-SRI/src/main/java/com/factura/sri/service/GeneradorXmlFacturaService.java:[163,1] illegal start of expression
+[ERROR] /C:/Users/ASUS/Documents/Herramientas de Prg/Practicas/API-Factura-SRI/src/main/java/com/factura/sri/service/GeneradorXmlFacturaService.java:[163,24] not a statement
+[ERROR] /C:/Users/ASUS/Documents/Herramientas de Prg/Practicas/API-Factura-SRI/src/main/java/com/factura/sri/service/GeneradorXmlFacturaService.java:[164,1] illegal start of expression
+[ERROR] /C:/Users/ASUS/Documents/Herramientas de Prg/Practicas/API-Factura-SRI/src/main/java/com/factura/sri/service/GeneradorXmlFacturaService.java:[164,52] not a statement
+[ERROR] /C:/Users/ASUS/Documents/Herramientas de Prg/Practicas/API-Factura-SRI/src/main/java/com/factura/sri/service/GeneradorXmlFacturaService.java:[165,1] illegal start of expression
+[ERROR] /C:/Users/ASUS/Documents/Herramientas de Prg/Practicas/API-Factura-SRI/src/main/java/com/factura/sri/service/GeneradorXmlFacturaService.java:[165,38] not a statement
+[ERROR] /C:/Users/ASUS/Documents/Herramientas de Prg/Practicas/API-Factura-SRI/src/main/java/com/factura/sri/service/GeneradorXmlFacturaService.java:[167,1] illegal start of expression
+[ERROR] /C:/Users/ASUS/Documents/Herramientas de Prg/Practicas/API-Factura-SRI/src/main/java/com/factura/sri/service/GeneradorXmlFacturaService.java:[167,15] not a statement
+[ERROR] /C:/Users/ASUS/Documents/Herramientas de Prg/Practicas/API-Factura-SRI/src/main/java/com/factura/sri/service/GeneradorXmlFacturaService.java:[168,1] illegal start of expression
+[ERROR] /C:/Users/ASUS/Documents/Herramientas de Prg/Practicas/API-Factura-SRI/src/main/java/com/factura/sri/service/GeneradorXmlFacturaService.java:[168,24] not a statement
+[ERROR] /C:/Users/ASUS/Documents/Herramientas de Prg/Practicas/API-Factura-SRI/src/main/java/com/factura/sri/service/GeneradorXmlFacturaService.java:[169,1] illegal start of expression
+[ERROR] /C:/Users/ASUS/Documents/Herramientas de Prg/Practicas/API-Factura-SRI/src/main/java/com/factura/sri/service/GeneradorXmlFacturaService.java:[169,17] not a statement
+[ERROR] /C:/Users/ASUS/Documents/Herramientas de Prg/Practicas/API-Factura-SRI/src/main/java/com/factura/sri/service/GeneradorXmlFacturaService.java:[170,1] illegal start of expression
+[ERROR] /C:/Users/ASUS/Documents/Herramientas de Prg/Practicas/API-Factura-SRI/src/main/java/com/factura/sri/service/GeneradorXmlFacturaService.java:[170,17] not a statement
+[ERROR] /C:/Users/ASUS/Documents/Herramientas de Prg/Practicas/API-Factura-SRI/src/main/java/com/factura/sri/service/GeneradorXmlFacturaService.java:[171,1] illegal start of expression
+[ERROR] /C:/Users/ASUS/Documents/Herramientas de Prg/Practicas/API-Factura-SRI/src/main/java/com/factura/sri/service/GeneradorXmlFacturaService.java:[171,17] not a statement
+[ERROR] /C:/Users/ASUS/Documents/Herramientas de Prg/Practicas/API-Factura-SRI/src/main/java/com/factura/sri/service/GeneradorXmlFacturaService.java:[429,2] reached end of file while parsing
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException

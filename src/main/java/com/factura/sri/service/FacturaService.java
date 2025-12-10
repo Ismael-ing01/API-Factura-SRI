@@ -25,15 +25,16 @@ public class FacturaService {
     private final FacturaRepository facturaRepository;
     private final ClienteRepository clienteRepository;
     private final ProductoRepository productoRepository;
-    // Aunque ItemFactura se guarda en cascada, podríamos necesitarlo para búsquedas futuras.
+    // Aunque ItemFactura se guarda en cascada, podríamos necesitarlo para búsquedas
+    // futuras.
     private final ItemFacturaRepository itemFacturaRepository;
     private final GeneradorXmlFacturaService generadorXmlFacturaService;
 
     // --- Constructor para Inyección de Dependencias ---
     public FacturaService(FacturaRepository facturaRepository,
-                          ClienteRepository clienteRepository,
-                          ProductoRepository productoRepository,
-                          ItemFacturaRepository itemFacturaRepository, GeneradorXmlFacturaService generadorXmlFacturaService) {
+            ClienteRepository clienteRepository,
+            ProductoRepository productoRepository,
+            ItemFacturaRepository itemFacturaRepository, GeneradorXmlFacturaService generadorXmlFacturaService) {
         this.facturaRepository = facturaRepository;
         this.clienteRepository = clienteRepository;
         this.productoRepository = productoRepository;
@@ -45,7 +46,7 @@ public class FacturaService {
     // Puedes poner estos valores en tu archivo application.properties/yml
     @Value("${sri.ruc.emisor}") // ej: sri.ruc.emisor=17XXXXXXXXX001
     private String rucEmisor;
-    @Value("${sri.ambiente}")   // ej: sri.ambiente=1 (Pruebas) o 2 (Producción)
+    @Value("${sri.ambiente}") // ej: sri.ambiente=1 (Pruebas) o 2 (Producción)
     private String tipoAmbiente;
 
     private String generarNumeroFactura(String establecimiento, String puntoEmision) {
@@ -63,9 +64,13 @@ public class FacturaService {
 
     /**
      * Método Principal: Crea una nueva factura.
-     * Recibe los datos de entrada (DTO), realiza cálculos, actualiza stock y guarda.
-     * @Transactional asegura que todas las operaciones (guardar factura, items, actualizar stock)
-     * ocurran como una sola unidad. Si algo falla, todo se deshace (rollback).
+     * Recibe los datos de entrada (DTO), realiza cálculos, actualiza stock y
+     * guarda.
+     * 
+     * @Transactional asegura que todas las operaciones (guardar factura, items,
+     *                actualizar stock)
+     *                ocurran como una sola unidad. Si algo falla, todo se deshace
+     *                (rollback).
      */
 
     @Transactional
@@ -81,7 +86,7 @@ public class FacturaService {
         factura.setEstadoSri(EstadoSri.GENERADA);
 
         String establecimiento = "001"; // Ejemplo
-        String puntoEmision = "001";    // Ejemplo
+        String puntoEmision = "001"; // Ejemplo
         factura.setFechaEmision(LocalDateTime.now());
         factura.setNumeroFactura(generarNumeroFactura(establecimiento, puntoEmision));
 
@@ -89,7 +94,6 @@ public class FacturaService {
         // Llamamos a la clase estática para generar la clave
         String claveAccesoGenerada = GeneradorClaveAcceso.generarClaveAcceso(factura, rucEmisor, tipoAmbiente);
         factura.setClaveAcceso(claveAccesoGenerada); // Guardamos la clave en la entidad
-
 
         // --- 4. Inicializar Acumuladores para Totales --- (Sin cambios)
         double subtotalSinImpuestos = 0.0;
@@ -102,7 +106,8 @@ public class FacturaService {
         for (ItemRequestDTO itemDto : requestDTO.getItems()) {
 
             Producto producto = productoRepository.findById(itemDto.getProductoId())
-                    .orElseThrow(() -> new RuntimeException("Producto no encontrado con ID: " + itemDto.getProductoId()));
+                    .orElseThrow(
+                            () -> new RuntimeException("Producto no encontrado con ID: " + itemDto.getProductoId()));
 
             if (producto.getStock() < itemDto.getCantidad()) {
                 throw new RuntimeException("Stock insuficiente para el producto: " + producto.getNombre()
@@ -198,7 +203,6 @@ public class FacturaService {
 
     // --- Otros Métodos (Buscar, Listar, etc. - se implementarán después) ---
 
-
     @Transactional(readOnly = true) // Optimiza la transacción para solo lectura
     public FacturaResponseDTO buscarFacturaPorId(Long id) {
         // 1. Busca la entidad Factura por ID
@@ -214,17 +218,18 @@ public class FacturaService {
     /**
      * Busca una entidad Factura por su ID.
      * Usado internamente o por otros servicios que necesiten la entidad completa.
-     * ¡Importante! Asegura que la transacción esté activa para cargar relaciones LAZY si es necesario.
+     * ¡Importante! Asegura que la transacción esté activa para cargar relaciones
+     * LAZY si es necesario.
      */
     @Transactional(readOnly = true) // Necesario para cargar posibles relaciones LAZY
     public Factura buscarEntidadFacturaPorId(Long id) {
         Factura factura = facturaRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Factura no encontrada con ID: " + id));
-        // Forzar carga de items si son LAZY y se necesitan fuera (opcional, depende de tu generador)
+        // Forzar carga de items si son LAZY y se necesitan fuera (opcional, depende de
+        // tu generador)
         // factura.getItems().size(); // Ejemplo para forzar carga
         return factura;
     }
-
 
     @Transactional(readOnly = true)
     public List<FacturaResponseDTO> listarTodasLasFacturas() {
@@ -244,7 +249,8 @@ public class FacturaService {
      *
      * @param id El ID de la factura a buscar.
      * @return El String XML de la factura.
-     * @throws RuntimeException Si la factura no se encuentra o hay error al generar XML.
+     * @throws RuntimeException Si la factura no se encuentra o hay error al generar
+     *                          XML.
      */
     @Transactional(readOnly = true) // La transacción mantiene la sesión abierta
     public String generarXmlParaFactura(Long id) {
@@ -253,7 +259,8 @@ public class FacturaService {
                 .orElseThrow(() -> new RuntimeException("Factura no encontrada con ID: " + id));
 
         // 2. Llama al servicio generador MIENTRAS LA TRANSACCIÓN ESTÁ ACTIVA
-        // Ahora, cuando el generador acceda a factura.getCliente().getDocumentoClientes(),
+        // Ahora, cuando el generador acceda a
+        // factura.getCliente().getDocumentoClientes(),
         // Hibernate podrá ir a la base de datos porque la sesión sigue abierta.
         return generadorXmlFacturaService.generarXml(factura);
     }

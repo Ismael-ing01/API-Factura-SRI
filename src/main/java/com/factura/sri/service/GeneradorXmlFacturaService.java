@@ -38,7 +38,8 @@ public class GeneradorXmlFacturaService {
     @Value("${sri.dirMatriz.emisor}") // Añade esto: sri.dirMatriz.emisor=Tu Direccion Matriz
     private String dirMatrizEmisor;
 
-    @Value("${sri.dirEstablecimiento.emisor}") // Añade esto: sri.dirEstablecimiento.emisor=Direccion Establecimiento 001
+    @Value("${sri.dirEstablecimiento.emisor}") // Añade esto: sri.dirEstablecimiento.emisor=Direccion Establecimiento
+                                               // 001
     private String dirEstablecimientoEmisor;
 
     @Value("${sri.contribuyenteEspecial.numero:#{null}}") // Opcional: sri.contribuyenteEspecial.numero=12345
@@ -80,8 +81,10 @@ public class GeneradorXmlFacturaService {
             Marshaller marshaller = context.createMarshaller();
 
             // Configurar JAXB para formato legible y sin la declaración XML estándar
-            marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE); // Para que el XML sea indentado y legible
-            marshaller.setProperty(Marshaller.JAXB_FRAGMENT, Boolean.TRUE); // Para omitir la declaración <?xml ...?> automática de JAXB
+            marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE); // Para que el XML sea indentado y
+                                                                                    // legible
+            marshaller.setProperty(Marshaller.JAXB_FRAGMENT, Boolean.TRUE); // Para omitir la declaración <?xml ...?>
+                                                                            // automática de JAXB
 
             // --- CORRECCIÓN AQUÍ ---
             // Usar la constante estándar de JAXB para la codificación
@@ -133,8 +136,10 @@ public class GeneradorXmlFacturaService {
         // Necesitamos obtener el código del tipo de documento del cliente
         // Esto asume que tienes una entidad DocumentoCliente asociada al Cliente
         // Si no, necesitarás ajustar esta lógica
-        DocumentoCliente docCliente = factura.getCliente().getDocumentoClientes().get(0); // Simplificación: toma el primero
-        info.setTipoIdentificacionComprador(docCliente.getTipoDocumento().getCodigoSri()); // NECESITAS ESTE CAMPO/METODO
+        DocumentoCliente docCliente = factura.getCliente().getDocumentoClientes().get(0); // Simplificación: toma el
+                                                                                          // primero
+        info.setTipoIdentificacionComprador(docCliente.getTipoDocumento().getCodigoSri()); // NECESITAS ESTE
+                                                                                           // CAMPO/METODO
         info.setRazonSocialComprador(factura.getCliente().getNombres() + " " + factura.getCliente().getApellidos());
         info.setIdentificacionComprador(docCliente.getNumeroDocumento());
         info.setDireccionComprador(factura.getCliente().getDireccion()); // Opcional
@@ -175,7 +180,8 @@ public class GeneradorXmlFacturaService {
         totalConImpuestosXml.setTotalImpuesto(totalImpuestos);
         info.setTotalConImpuestos(totalConImpuestosXml);
 
-        // Pagos (Ejemplo simple: un solo pago con la forma "Sin utilización sistema financiero")
+        // Pagos (Ejemplo simple: un solo pago con la forma "Sin utilización sistema
+        // financiero")
         PagoXml pago = new PagoXml();
         pago.setFormaPago("01"); // Código para "SIN UTILIZACION..." (Tabla 24)
         pago.setTotal(String.format(LOCALE_US, "%.2f", factura.getTotal()));
@@ -190,10 +196,11 @@ public class GeneradorXmlFacturaService {
         for (ItemFactura item : factura.getItems()) {
             DetalleXml detalle = new DetalleXml();
             // Asume que Producto tiene un campo 'codigo' o usa el ID
-            detalle.setCodigoPrincipal(item.getProducto().getId().toString()); // O usa un código de producto si lo tienes
+            detalle.setCodigoPrincipal(item.getProducto().getId().toString()); // O usa un código de producto si lo
+                                                                               // tienes
             detalle.setDescripcion(item.getProducto().getNombre());
             // Formatear cantidad y precio unitario (hasta 6 decimales permitidos en v1.1.0)
-            detalle.setCantidad(String.format(LOCALE_US, "%.6f", (double)item.getCantidad()));
+            detalle.setCantidad(String.format(LOCALE_US, "%.6f", (double) item.getCantidad()));
             detalle.setPrecioUnitario(String.format(LOCALE_US, "%.6f", item.getPrecioUnitario()));
             detalle.setDescuento("0.00"); // Asumiendo sin descuentos por línea
             detalle.setPrecioTotalSinImpuesto(String.format(LOCALE_US, "%.2f", item.getSubtotal()));
@@ -232,22 +239,23 @@ public class GeneradorXmlFacturaService {
 
     // Método opcional para información adicional
     /*
-    private InfoAdicionalXml crearInfoAdicional(Factura factura) {
-        InfoAdicionalXml info = new InfoAdicionalXml();
-        List<CampoAdicionalXml> campos = new ArrayList<>();
-
-        CampoAdicionalXml email = new CampoAdicionalXml();
-        email.setNombre("Email");
-        email.setValue(factura.getCliente().getEmail()); // Asumiendo que Cliente tiene email
-        campos.add(email);
-
-        // Añadir más campos si es necesario
-
-        if (!campos.isEmpty()) {
-            info.setCampoAdicional(campos);
-            return info;
-        }
-        return null; // No añadir la sección si no hay campos
-    }
-    */
+     * private InfoAdicionalXml crearInfoAdicional(Factura factura) {
+     * InfoAdicionalXml info = new InfoAdicionalXml();
+     * List<CampoAdicionalXml> campos = new ArrayList<>();
+     * 
+     * CampoAdicionalXml email = new CampoAdicionalXml();
+     * email.setNombre("Email");
+     * email.setValue(factura.getCliente().getEmail()); // Asumiendo que Cliente
+     * tiene email
+     * campos.add(email);
+     * 
+     * // Añadir más campos si es necesario
+     * 
+     * if (!campos.isEmpty()) {
+     * info.setCampoAdicional(campos);
+     * return info;
+     * }
+     * return null; // No añadir la sección si no hay campos
+     * }
+     */
 }
